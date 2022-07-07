@@ -1,0 +1,36 @@
+name: Convert Markdown to HTML
+on:
+  workflow_dispatch:
+    inputs:
+      rawlink:
+        description: 'enter to be converted markdown source link'
+        required: true
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: set up environment for conversion
+        run: |
+          sudo apt update -y && sudo apt upgrade -y
+          sudo apt install python3 -y
+          sudo apt install python3-pip -y
+          sudo apt install wget -y
+          virtualenv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+          markdownserver
+
+      - name: convert markdown to html
+        env:
+          RAW_LINK: ${{ github.event.inputs.rawlink }}
+        run: |
+          wget -O raw.md $RAW_LINK
+          convert raw.md converted.html
+
+      - name: release converted file as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: converted-file
+          path: converted.html
